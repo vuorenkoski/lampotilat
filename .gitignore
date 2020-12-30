@@ -1,3 +1,5 @@
 lampotilat/data/*
 db.sqlite3
 lampotilat/__pycache__/*
+.ipynb_checkpoints/
+
