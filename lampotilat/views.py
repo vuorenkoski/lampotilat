@@ -35,8 +35,6 @@ def load_dataset(last_measurement):
     df = df.sort_values('date')
     df = df.groupby(pd.Grouper(freq='H')).mean()
 
-    print(df)
-
     records = df.to_records()  # convert to records
     for record in records:
         measurement = Measurement(
@@ -62,12 +60,15 @@ def setup(request):
     return redirect('/')
 
 def last_measurement_epoch():
-    return Measurement.objects.aggregate(Max('date'))['date__max']+60*60*2
+    max=Measurement.objects.aggregate(Max('date'))['date__max']
+    if max==None:
+        return 0
+    return max+60*60*2
 
 def index(request):
     last_measurement = 'ei dataa'
     epoch = last_measurement_epoch()
-    if epoch!=None:
+    if epoch>0:
         last_measurement = datetime.fromtimestamp(last_measurement_epoch()).strftime("%d.%m.%Y, %H:%M")
     return render(request, 'lampotilat/index.html', {'loaded': last_measurement})
 
