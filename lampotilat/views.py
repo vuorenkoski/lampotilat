@@ -11,15 +11,17 @@ from datetime import datetime
 import dateutil.relativedelta
 
 timezone = 'Europe/Helsinki'
-data_folder = 'lampotilat/data/'
+data_folder = '/var/www/html/nuottis/data/'
+#data_folder = 'lampotilat/data/'
 chart_file = 'lampotilat/static/chart.png'
 field_names = ['sisalla', 'ulkona', 'jarvessa', 'kellarissa', 'rauhalassa', 'saunassa']
 
 def load_data(name, last_measurement):
     df = pd.read_csv(data_folder + name+'.csv', sep=',', warn_bad_lines=False, error_bad_lines=False, dtype=str)
     df.columns = ['epoch', 'data']
-    df = df[df['epoch'].astype(int)>last_measurement*1000]
-    df['date'] = pd.to_datetime(df['epoch'], unit='ms', utc=True)
+    df['epoch'] = df['epoch'].str[0:-3]
+    df = df[df['epoch'].astype(int)>last_measurement]
+    df['date'] = pd.to_datetime(df['epoch'], unit='s', utc=True)
     df[name] = pd.to_numeric(df['data'], errors='coerce')
     df = df.set_index('date').drop(columns=['epoch', 'data'])
     df = df.tz_convert(tz=timezone)
@@ -35,7 +37,7 @@ def load_dataset(last_measurement):
     df = df.sort_values('date')
     df = df.groupby(pd.Grouper(freq='H')).mean()
 
-    records = df.to_records()  # convert to records
+    records = df.to_records()
     for record in records:
         measurement = Measurement(
             date = record[0].astype('datetime64[s]').astype('int'),
