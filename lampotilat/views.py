@@ -53,7 +53,7 @@ def load_dataset(last_measurement):
 def setup(request):
     # Poistetaana viimeinen koska se on todennäköisesti puutteellinen
     epoch = last_measurement_epoch()
-    if epoch!=None:
+    if epoch>0:
         Measurement.objects.filter(date=epoch).delete()
     load_dataset(last_measurement_epoch())
 
