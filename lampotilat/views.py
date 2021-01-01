@@ -5,15 +5,19 @@ from django.db.models import Max
 
 import numpy as np
 import pandas as pd
-import matplotlib 
+import matplotlib
 import matplotlib.pyplot as plt
 from datetime import datetime
 import dateutil.relativedelta
 
+UTC2 = 2*60*60
+
 timezone = 'Europe/Helsinki'
 data_folder = '/var/www/html/nuottis/data/'
 #data_folder = 'lampotilat/data/'
-chart_file = 'lampotilat/static/chart.png'
+chart_file = 'lampotilat/static/lampotilat/chart.png'
+path = '/home/pi/serveri/lampotilat_app/lampotilat/'
+#path = ''
 field_names = ['sisalla', 'ulkona', 'jarvessa', 'kellarissa', 'rauhalassa', 'saunassa']
 
 def load_data(name, last_measurement):
@@ -65,7 +69,7 @@ def last_measurement_epoch():
     max=Measurement.objects.aggregate(Max('date'))['date__max']
     if max==None:
         return 0
-    return max+60*60*2
+    return max+UTC2
 
 def index(request):
     last_measurement = 'ei dataa'
@@ -88,7 +92,7 @@ def objects_to_df(model, fields, **kwargs):
     ex:  ['%Y-%m', 'dat_col1', 'date_col2']
     ``kwargs`` can be include to limit the model query to specific records
     """
-    
+
     fields_wd=fields+['date']
     records = model.objects.filter(**kwargs).values_list(*fields_wd)
     df = pd.DataFrame(list(records), columns=fields_wd)
@@ -96,30 +100,30 @@ def objects_to_df(model, fields, **kwargs):
     return df
 
 def charts(request):
-    fields=[]
-    now=datetime.now()
-    endDate=now.strftime("%Y-%m-%d")
-    date=now-dateutil.relativedelta.relativedelta(months=1)
-    startDate=date.strftime("%Y-%m-%d")
-
+    fields = []
+    endDate = datetime.now()
+    startDate = endDate - dateutil.relativedelta.relativedelta(months=1)
+    vrk = False
     if request.method=="POST":
         fields.extend(request.POST.getlist('anturit'))
-        startDate=request.POST.get('startDate')
-        print(request.POST.values)
-        endDate=request.POST.get('endDate')
+        startDate = datetime.strptime(request.POST.get('startDate'), "%Y-%m-%d")
+        endDate = datetime.strptime(request.POST.get('endDate'), "%Y-%m-%d")
+        vrk = request.POST.get('keskiarvo')=='vrk'
     else:
         fields.extend(['sisalla','ulkona'])
 
-    df = objects_to_df(Measurement, fields=fields)
+    df = objects_to_df(Measurement, fields, date__gte=startDate.timestamp()-UTC2, date__lte=endDate.timestamp()+24*60*60-UTC2)
     df['datetime'] = pd.to_datetime(df['date'], unit='s', utc=True)
     df = df.set_index('datetime').drop(columns=['date'])
     df = df.tz_convert(tz=timezone)
+    if vrk:
+        df = df.groupby(pd.Grouper(freq='D')).mean()
 
-    df2 = df[fields].loc[startDate:endDate]
+#    df = df[fields].loc[startDate:endDate]
     plt.rcParams['figure.figsize'] = [12, 5]
-    df2.plot()
+    df.plot()
     plt.legend(loc='best')
-    plt.savefig(chart_file)
+    plt.savefig(path+chart_file)
     return render(request, 'lampotilat/charts.html', 
-        {'fields':field_names, 'prechecked': fields, 'sdate': startDate, 'edate': endDate})
+        {'fields':field_names, 'prechecked': fields, 'sdate': startDate.strftime("%Y-%m-%d"), 'edate': endDate.strftime("%Y-%m-%d"), 'vrk': vrk})
 

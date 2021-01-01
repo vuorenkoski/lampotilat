@@ -3,7 +3,8 @@
     <title>Nuottamäen lämpötiloja</title>
   </head>
   <body>
-    <h1>Charts</h1>
+    <a href="/">Alkuun</a>
+    <h1>Kaavio</h1>
 
 
     <form action="/charts" method="POST">
@@ -24,14 +25,24 @@
                 <input type="date" id="startDate" name="startDate" value="{{ sdate }}"> 
                 <label for="startDate">Alkupäivämäärä</label><br>
                 <input type="date" id="endDate" name="endDate" value="{{ edate }}">
-                <label for="endDate">Loppupäivämäärä</label>
+                <label for="endDate">Loppupäivämäärä</label><br>
+                {% if vrk %}
+                    <input type="radio" id="tunti" name="keskiarvo" value="tunti">
+                    <label for="tunt">Tunnin keskiarvo</label><br>
+                    <input type="radio" id="vrk" name="keskiarvo" value="vrk" checked>
+                    <label for="vrk">Vuorokauden keskiarvo</label><br>
+                {% else %}
+                    <input type="radio" id="tunti" name="keskiarvo" value="tunti" checked>
+                    <label for="tunt">Tunnin keskiarvo</label><br>
+                    <input type="radio" id="vrk" name="keskiarvo" value="vrk">
+                    <label for="vrk">Vuorokauden keskiarvo</label><br>
+                {% endif %}
             </td>
         </tr>
     </table>
         <input type="submit" value="Päivitä"/>
     </form>
-
     {% load static %}
-    <img src="{% static 'chart.png' %}">
+    <img src="{% static 'lampotilat/chart.png' %}">
   </body>
 </html>
