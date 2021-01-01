@@ -4,23 +4,13 @@
   </head>
   <body>
     <a href="/">Alkuun</a>
-    <h1>Kaavio</h1>
+    <h1>Liiketunnistin, kaavionäkymä</h1>
 
 
-    <form action="/charts" method="POST">
+    <form action="/movchart" method="POST">
         {% csrf_token %}
         <table>
         <tr>
-            <td>
-                {% for field in fields %}
-                    {% if field in prechecked %}
-                        <input type="checkbox" id="{{field}}" name="anturit" value="{{field}}" checked>
-                    {% else %}
-                        <input type="checkbox" id="{{field}}" name="anturit" value="{{field}}">
-                {% endif %}
-                <label for="{{field}}">{{field}}</label><br>
-                {% endfor %}
-            </td>
             <td>
                 <input type="date" id="startDate" name="startDate" value="{{ sdate }}"> 
                 <label for="startDate">Alkupäivämäärä</label><br>

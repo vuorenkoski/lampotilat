@@ -25,7 +25,7 @@ SECRET_KEY = '*$71%(p+f-i+5d6a9j_soa2@$yh_9z&j$%i%3i=@d^1eal8dod'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['temps.vuorenkoski.fi']
+ALLOWED_HOSTS = ['temps.vuorenkoski.fi', '127.0.0.1']
 
 # Application definition
 

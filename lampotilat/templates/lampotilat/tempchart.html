@@ -1,0 +1,48 @@
+<html>
+  <head>
+    <title>Nuottamäen lämpötiloja</title>
+  </head>
+  <body>
+    <a href="/">Alkuun</a>
+    <h1>Lämpötilat - kaavionäkymä</h1>
+
+
+    <form action="/tempchart" method="POST">
+        {% csrf_token %}
+        <table>
+        <tr>
+            <td>
+                {% for field in fields %}
+                    {% if field in prechecked %}
+                        <input type="checkbox" id="{{field}}" name="anturit" value="{{field}}" checked>
+                    {% else %}
+                        <input type="checkbox" id="{{field}}" name="anturit" value="{{field}}">
+                {% endif %}
+                <label for="{{field}}">{{field}}</label><br>
+                {% endfor %}
+            </td>
+            <td>
+                <input type="date" id="startDate" name="startDate" value="{{ sdate }}"> 
+                <label for="startDate">Alkupäivämäärä</label><br>
+                <input type="date" id="endDate" name="endDate" value="{{ edate }}">
+                <label for="endDate">Loppupäivämäärä</label><br>
+                {% if vrk %}
+                    <input type="radio" id="tunti" name="keskiarvo" value="tunti">
+                    <label for="tunt">Tunnin keskiarvo</label><br>
+                    <input type="radio" id="vrk" name="keskiarvo" value="vrk" checked>
+                    <label for="vrk">Vuorokauden keskiarvo</label><br>
+                {% else %}
+                    <input type="radio" id="tunti" name="keskiarvo" value="tunti" checked>
+                    <label for="tunt">Tunnin keskiarvo</label><br>
+                    <input type="radio" id="vrk" name="keskiarvo" value="vrk">
+                    <label for="vrk">Vuorokauden keskiarvo</label><br>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+        <input type="submit" value="Päivitä"/>
+    </form>
+    {% load static %}
+    <img src="{% static 'lampotilat/chart.png' %}">
+  </body>
+</html>

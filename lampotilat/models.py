@@ -1,11 +1,13 @@
 from django.db import models
 
-class Measurement(models.Model):
+class Temperature(models.Model):
     date = models.IntegerField(unique=True)
-    sisalla = models.FloatField(null=True)
-    ulkona = models.FloatField(null=True)
-    jarvessa = models.FloatField(null=True)
-    rauhalassa = models.FloatField(null=True)
-    kellarissa = models.FloatField(null=True)
-    saunassa = models.FloatField(null=True)
+    Sisalla = models.FloatField(null=True)
+    Ulkona = models.FloatField(null=True)
+    Jarvessa = models.FloatField(null=True)
+    Rauhalassa = models.FloatField(null=True)
+    Kellarissa = models.FloatField(null=True)
+    Saunassa = models.FloatField(null=True)
+    Roykassa = models.FloatField(null=True)
+
 

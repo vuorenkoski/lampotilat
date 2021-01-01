@@ -21,6 +21,8 @@ from . import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='index'),
-    path('charts', views.charts, name='charts'),
+    path('tempchart', views.tempchart, name='tempchart'),
+    path('movchart', views.movchart, name='movchart'),
+    path('rainchart', views.rainchart, name='rainchart'),
     path('setup', views.setup, name='setup'),
 ]
