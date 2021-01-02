@@ -22,7 +22,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='index'),
     path('tempchart', views.tempchart, name='tempchart'),
-    path('movchart', views.movchart, name='movchart'),
+    path('movechart', views.movechart, name='movechart'),
     path('rainchart', views.rainchart, name='rainchart'),
+    path('windchart', views.windchart, name='windchart'),
+    path('means', views.means, name='means'),
     path('setup', views.setup, name='setup'),
 ]

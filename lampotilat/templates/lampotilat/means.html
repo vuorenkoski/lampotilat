@@ -1,0 +1,48 @@
+<html>
+  <head>
+    <title>Nuottamäen lämpötiloja</title>
+  </head>
+  <body>
+    <a href="/">Alkuun</a>
+    <h1>Lämpötilat - keskiarvoja</h1>
+    <form action="/means" method="POST">
+        {% csrf_token %}
+        {% for year in years %}
+            {% if year == prechecked %}
+                <input type="radio" id="{{year}}" name="year" value="{{year}}" checked>
+            {% else %}
+                <input type="radio" id="{{year}}" name="year" value="{{year}}">
+            {% endif %}
+            <label for="{{year}}">{{year}}</label>
+        {% endfor %}
+        <input type="submit" value="Päivitä"/>
+    </form>
+    <table cellspacing=24>
+        <tr>
+            <td>
+                <h2>Kuukauden keskiarvot</h2>
+                {{ table1_code|safe }}
+            </td>
+            <td>
+                <h2>verrattuna keskimääräiseen</h2>
+                {{ table3_code|safe }} 
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <h2>Vuoden keskiarvot</h2>
+                {{ table2_code|safe }}
+            </td>
+            <td>
+                <h2>verrattuna keskimääräiseen</h2>
+                {{ table4_code|safe }} 
+            </td>
+        </tr>
+        <tr>
+            <td>
+                {{ table5_code|safe }} 
+            </td>
+        </tr>
+    </table>
+  </body>
+</html>

@@ -9,5 +9,9 @@ class Temperature(models.Model):
     Kellarissa = models.FloatField(null=True)
     Saunassa = models.FloatField(null=True)
     Roykassa = models.FloatField(null=True)
+    Tuuli = models.FloatField(null=True)
+    Tuulimax = models.FloatField(null=True)
+    Sade = models.FloatField(null=True)
+    Liike = models.FloatField(null=True)
 
 

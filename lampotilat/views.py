@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from .models import Temperature
 from django.db.models import Max
 
+from .load_data import load_dataset, timezone
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -12,7 +13,6 @@ import dateutil.relativedelta
 
 UTC2 = 2*60*60
 
-timezone = 'Europe/Helsinki'
 #data_folder = '/var/www/html/nuottis/data/'
 data_folder = 'lampotilat/data/'
 chart_file = 'lampotilat/static/lampotilat/chart.png'
@@ -21,58 +21,20 @@ path = ''
 csv_files = ['sisalla', 'ulkona', 'jarvessa', 'kellarissa', 'rauhalassa', 'saunassa', 'lampo_roykka']
 field_names = ['Sisalla', 'Ulkona', 'Jarvessa', 'Kellarissa', 'Rauhalassa', 'Saunassa', 'Roykassa']
 
-def save_figure(df, kind):
+def save_figure(df, kind, unit):
     fig = df.plot(kind=kind,  figsize=(12, 5), fontsize=14).get_figure()
     fig.axes[0].legend(loc='best', fontsize=14)
-    fig.axes[0].set_ylabel('lämpötila', fontsize=14)
+    fig.axes[0].set_ylabel(unit, fontsize=14)
     fig.axes[0].set_xlabel('')
     fig.axes[0].grid(axis='y')
     fig.savefig(path+chart_file)
-
-def load_data(name, last_measurement):
-    df = pd.read_csv(data_folder + name+'.csv', sep=',', warn_bad_lines=False, error_bad_lines=False, dtype=str)
-    df.columns = ['epoch', 'data']
-    df['epoch'] = df['epoch'].str[0:-3]
-    df = df[df['epoch'].astype(int)>last_measurement]
-    df['date'] = pd.to_datetime(df['epoch'], unit='s', utc=True)
-    df[name] = pd.to_numeric(df['data'], errors='coerce')
-    df = df.set_index('date').drop(columns=['epoch', 'data'])
-    df = df.tz_convert(tz=timezone)
-    df = df[df[name]<50]
-    df = df[df[name]>-50]
-    return df
-
-def load_dataset(last_measurement):
-    data=[]
-    for file in csv_files:
-        data.append(load_data(file, last_measurement))
-    df = pd.concat(data)
-    df = df.sort_values('date')
-    df = df.groupby(pd.Grouper(freq='H')).mean()
-
-    records = df.to_records()
-    for record in records:
-        temperature = Temperature(
-            date = record[0].astype('datetime64[s]').astype('int'),
-            Sisalla = record[1], 
-            Ulkona = record[2], 
-            Jarvessa = record[3], 
-            Kellarissa = record[4],
-            Rauhalassa = record[5], 
-            Saunassa = record[6], 
-            Roykassa = record[7],
-        )
-        temperature.save()
 
 def setup(request):
     # Poistetaana viimeinen koska se on todennäköisesti puutteellinen
     epoch = last_measurement_epoch()
     if epoch>0:
-        Measurement.objects.filter(date=epoch).delete()
-    load_dataset(last_measurement_epoch())
-
-
-#    df_daily = df.groupby(pd.Grouper(freq='D')).mean()
+        Temperature.objects.filter(date=epoch).delete()
+    load_dataset(last_measurement_epoch(), csv_files, data_folder)
     return redirect('/')
 
 def last_measurement_epoch():
@@ -92,6 +54,9 @@ def objects_to_df(model, fields, **kwargs):
     fields_wd=fields+['date']
     records = model.objects.filter(**kwargs).values_list(*fields_wd)
     df = pd.DataFrame(list(records), columns=fields_wd)
+    df['datetime'] = pd.to_datetime(df['date'], unit='s', utc=True)
+    df = df.set_index('datetime').drop(columns=['date'])
+    df = df.tz_convert(tz=timezone)
     return df
 
 def tempchart(request):
@@ -108,17 +73,84 @@ def tempchart(request):
         fields.extend(['Sisalla','Ulkona'])
 
     df = objects_to_df(Temperature, fields, date__gte=startDate.timestamp()-UTC2, date__lte=endDate.timestamp()+24*60*60-UTC2)
-    df['datetime'] = pd.to_datetime(df['date'], unit='s', utc=True)
-    df = df.set_index('datetime').drop(columns=['date'])
-    df = df.tz_convert(tz=timezone)
+
     if vrk:
         df = df.groupby(pd.Grouper(freq='D')).mean()
-    save_figure(df,'line')
+    save_figure(df,'line','celsius')
     return render(request, 'lampotilat/tempchart.html', 
         {'fields':field_names, 'prechecked': fields, 'sdate': startDate.strftime("%Y-%m-%d"), 'edate': endDate.strftime("%Y-%m-%d"), 'vrk': vrk})
 
-def movchart(request):
-    pass
+def movechart(request):
+    endDate = datetime.now()
+    startDate = endDate - dateutil.relativedelta.relativedelta(months=1)
+    vrk = False
+    if request.method=="POST":
+        startDate = datetime.strptime(request.POST.get('startDate'), "%Y-%m-%d")
+        endDate = datetime.strptime(request.POST.get('endDate'), "%Y-%m-%d")
+        vrk = request.POST.get('keskiarvo')=='vrk'
+    df = objects_to_df(Temperature, ['Liike'], date__gte=startDate.timestamp()-UTC2, date__lte=endDate.timestamp()+24*60*60-UTC2)
+
+    if vrk:
+        df = df.groupby(pd.Grouper(freq='D')).sum()
+    save_figure(df,'line','lukumaara')
+    return render(request, 'lampotilat/movechart.html', 
+        {'sdate': startDate.strftime("%Y-%m-%d"), 'edate': endDate.strftime("%Y-%m-%d"), 'vrk': vrk})
 
 def rainchart(request):
-    pass
+    endDate = datetime.now()
+    startDate = endDate - dateutil.relativedelta.relativedelta(months=1)
+    vrk = False
+    if request.method=="POST":
+        startDate = datetime.strptime(request.POST.get('startDate'), "%Y-%m-%d")
+        endDate = datetime.strptime(request.POST.get('endDate'), "%Y-%m-%d")
+        vrk = request.POST.get('keskiarvo')=='vrk'
+    df = objects_to_df(Temperature, ['Sade'], date__gte=startDate.timestamp()-UTC2, date__lte=endDate.timestamp()+24*60*60-UTC2)
+
+    if vrk:
+        df = df.groupby(pd.Grouper(freq='D')).sum()
+    save_figure(df,'line','mm')
+    return render(request, 'lampotilat/rainchart.html', 
+        {'sdate': startDate.strftime("%Y-%m-%d"), 'edate': endDate.strftime("%Y-%m-%d"), 'vrk': vrk})
+
+def windchart(request):
+    endDate = datetime.now()
+    startDate = endDate - dateutil.relativedelta.relativedelta(months=1)
+    vrk = False
+    if request.method=="POST":
+        startDate = datetime.strptime(request.POST.get('startDate'), "%Y-%m-%d")
+        endDate = datetime.strptime(request.POST.get('endDate'), "%Y-%m-%d")
+        vrk = request.POST.get('keskiarvo')=='vrk'
+    df = objects_to_df(Temperature, ['Tuuli', 'Tuulimax'], date__gte=startDate.timestamp()-UTC2, date__lte=endDate.timestamp()+24*60*60-UTC2)
+
+    if vrk:
+         df = df.groupby(pd.Grouper(freq='D')).agg({'Tuuli':'mean', 'Tuulimax':'max'})
+    save_figure(df,'line','m/s')
+    return render(request, 'lampotilat/windchart.html', 
+        {'sdate': startDate.strftime("%Y-%m-%d"), 'edate': endDate.strftime("%Y-%m-%d"), 'vrk': vrk})
+
+def means(request):
+    year=2015
+    if request.method=="POST":
+        year = int(request.POST.get('year'))
+    df = objects_to_df(Temperature, ['Sisalla', 'Ulkona', 'Jarvessa', 'Kellarissa'])
+    df = df.groupby(pd.Grouper(freq='D')).mean()
+    df['month'] = pd.DatetimeIndex(df.index).month
+    df['year'] = pd.DatetimeIndex(df.index).year
+    years = df.year.unique()
+    df_monthly = df[df['year']==year].groupby(pd.Grouper(freq='M')).mean().set_index('month')
+    df_diff = df_monthly-df.drop(columns=['year']).groupby(['month']).mean()
+    df_years = df.groupby('year').mean()
+    table1 = df_monthly.to_html(columns=['Sisalla', 'Ulkona', 'Jarvessa', 'Kellarissa'], 
+        index=True, float_format='%.1f', na_rep='')
+    table2 = df_monthly.mean().to_frame().T.to_html(columns=['Sisalla', 'Ulkona', 'Jarvessa', 'Kellarissa'], 
+        index=False, float_format='%.1f', na_rep='')
+    table3 = df_diff.to_html(columns=['Sisalla', 'Ulkona', 'Jarvessa', 'Kellarissa'], 
+        index=True, float_format='%.1f', na_rep='')
+    table4 = df_diff.mean().to_frame().T.to_html(columns=['Sisalla', 'Ulkona', 'Jarvessa', 'Kellarissa'], 
+        index=False, float_format='%.1f', na_rep='')
+    table5 = df_years.to_html(columns=['Sisalla', 'Ulkona', 'Jarvessa', 'Kellarissa'], 
+        index=True, float_format='%.1f', na_rep='')
+
+    return render(request, 'lampotilat/means.html', {'table1_code':table1, 
+        'table2_code':table2, 'table3_code':table3, 'table4_code':table4, 
+        'table5_code':table5, 'years': years, 'prechecked': year}) 

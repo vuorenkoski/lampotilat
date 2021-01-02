@@ -4,10 +4,10 @@
   </head>
   <body>
     <a href="/">Alkuun</a>
-    <h1>Liiketunnistin, kaavionäkymä</h1>
+    <h1>Sademäärä (Röykkä), kaavionäkymä</h1>
 
 
-    <form action="/movchart" method="POST">
+    <form action="/rainchart" method="POST">
         {% csrf_token %}
         <table>
         <tr>
@@ -18,14 +18,14 @@
                 <label for="endDate">Loppupäivämäärä</label><br>
                 {% if vrk %}
                     <input type="radio" id="tunti" name="keskiarvo" value="tunti">
-                    <label for="tunt">Tunnin keskiarvo</label><br>
+                    <label for="tunt">Tunnissa</label><br>
                     <input type="radio" id="vrk" name="keskiarvo" value="vrk" checked>
-                    <label for="vrk">Vuorokauden keskiarvo</label><br>
+                    <label for="vrk">Vuorokaudessa</label><br>
                 {% else %}
                     <input type="radio" id="tunti" name="keskiarvo" value="tunti" checked>
-                    <label for="tunt">Tunnin keskiarvo</label><br>
+                    <label for="tunt">Tunnissa</label><br>
                     <input type="radio" id="vrk" name="keskiarvo" value="vrk">
-                    <label for="vrk">Vuorokauden keskiarvo</label><br>
+                    <label for="vrk">Vuorokaudessa</label><br>
                 {% endif %}
             </td>
         </tr>
