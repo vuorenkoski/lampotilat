@@ -13,5 +13,6 @@ class Temperature(models.Model):
     Tuulimax = models.FloatField(null=True)
     Sade = models.FloatField(null=True)
     Liike = models.FloatField(null=True)
+    Lumi = models.FloatField(null=True)
 
 

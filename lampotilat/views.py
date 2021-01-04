@@ -9,17 +9,16 @@ import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
 from datetime import datetime
-import dateutil.relativedelta
+from dateutil import tz, relativedelta
 
-UTC2 = 2*60*60
-
-#data_folder = '/var/www/html/nuottis/data/'
-data_folder = 'lampotilat/data/'
+data_folder = '/var/www/html/nuottis/data/'
+#data_folder = 'lampotilat/data/'
 chart_file = 'lampotilat/static/lampotilat/chart.png'
-#path = '/home/pi/serveri/lampotilat_app/lampotilat/'
-path = ''
+path = '/home/pi/serveri/lampotilat_app/lampotilat/'
+#path = ''
 csv_files = ['sisalla', 'ulkona', 'jarvessa', 'kellarissa', 'rauhalassa', 'saunassa', 'lampo_roykka']
 field_names = ['Sisalla', 'Ulkona', 'Jarvessa', 'Kellarissa', 'Rauhalassa', 'Saunassa', 'Roykassa']
+timez = tz.gettz(timezone)
 
 def save_figure(df, kind, unit):
     fig = df.plot(kind=kind,  figsize=(12, 5), fontsize=14).get_figure()
@@ -41,13 +40,13 @@ def last_measurement_epoch():
     max=Temperature.objects.aggregate(Max('date'))['date__max']
     if max==None:
         return 0
-    return max+UTC2
+    return max
 
 def index(request):
     last_measurement = 'ei dataa'
     epoch = last_measurement_epoch()
     if epoch>0:
-        last_measurement = datetime.fromtimestamp(last_measurement_epoch()).strftime("%d.%m.%Y, %H:%M")
+        last_measurement = datetime.fromtimestamp(epoch, timez).strftime("%d.%m.%Y, %H:%M")
     return render(request, 'lampotilat/index.html', {'loaded': last_measurement})
 
 def objects_to_df(model, fields, **kwargs):
@@ -62,17 +61,19 @@ def objects_to_df(model, fields, **kwargs):
 def tempchart(request):
     fields = []
     endDate = datetime.now()
-    startDate = endDate - dateutil.relativedelta.relativedelta(months=1)
+    startDate = endDate - relativedelta.relativedelta(months=1)
     vrk = False
     if request.method=="POST":
         fields.extend(request.POST.getlist('anturit'))
         startDate = datetime.strptime(request.POST.get('startDate'), "%Y-%m-%d")
+        startDate.replace(tzinfo=timez)
         endDate = datetime.strptime(request.POST.get('endDate'), "%Y-%m-%d")
+        endDate.replace(tzinfo=timez)
         vrk = request.POST.get('keskiarvo')=='vrk'
     else:
         fields.extend(['Sisalla','Ulkona'])
 
-    df = objects_to_df(Temperature, fields, date__gte=startDate.timestamp()-UTC2, date__lte=endDate.timestamp()+24*60*60-UTC2)
+    df = objects_to_df(Temperature, fields, date__gte=startDate.timestamp(), date__lte=endDate.timestamp()+24*60*60)
 
     if vrk:
         df = df.groupby(pd.Grouper(freq='D')).mean()
@@ -82,13 +83,15 @@ def tempchart(request):
 
 def movechart(request):
     endDate = datetime.now()
-    startDate = endDate - dateutil.relativedelta.relativedelta(months=1)
-    vrk = False
+    startDate = endDate - relativedelta.relativedelta(months=1)
+    vrk = True
     if request.method=="POST":
         startDate = datetime.strptime(request.POST.get('startDate'), "%Y-%m-%d")
+        startDate.replace(tzinfo=timez)
         endDate = datetime.strptime(request.POST.get('endDate'), "%Y-%m-%d")
+        endDate.replace(tzinfo=timez)
         vrk = request.POST.get('keskiarvo')=='vrk'
-    df = objects_to_df(Temperature, ['Liike'], date__gte=startDate.timestamp()-UTC2, date__lte=endDate.timestamp()+24*60*60-UTC2)
+    df = objects_to_df(Temperature, ['Liike'], date__gte=startDate.timestamp(), date__lte=endDate.timestamp()+24*60*60)
 
     if vrk:
         df = df.groupby(pd.Grouper(freq='D')).sum()
@@ -98,29 +101,33 @@ def movechart(request):
 
 def rainchart(request):
     endDate = datetime.now()
-    startDate = endDate - dateutil.relativedelta.relativedelta(months=1)
-    vrk = False
+    startDate = endDate - relativedelta.relativedelta(months=1)
+    vrk = True
     if request.method=="POST":
         startDate = datetime.strptime(request.POST.get('startDate'), "%Y-%m-%d")
+        startDate.replace(tzinfo=timez)
         endDate = datetime.strptime(request.POST.get('endDate'), "%Y-%m-%d")
+        endDate.replace(tzinfo=timez)
         vrk = request.POST.get('keskiarvo')=='vrk'
-    df = objects_to_df(Temperature, ['Sade'], date__gte=startDate.timestamp()-UTC2, date__lte=endDate.timestamp()+24*60*60-UTC2)
+    df = objects_to_df(Temperature, ['Sade', 'Lumi'], date__gte=startDate.timestamp(), date__lte=endDate.timestamp()+24*60*60)
 
     if vrk:
-        df = df.groupby(pd.Grouper(freq='D')).sum()
+        df = df.groupby(pd.Grouper(freq='D')).agg({'Sade':'sum', 'Lumi':'mean'})
     save_figure(df,'line','mm')
     return render(request, 'lampotilat/rainchart.html', 
         {'sdate': startDate.strftime("%Y-%m-%d"), 'edate': endDate.strftime("%Y-%m-%d"), 'vrk': vrk})
 
 def windchart(request):
     endDate = datetime.now()
-    startDate = endDate - dateutil.relativedelta.relativedelta(months=1)
+    startDate = endDate - relativedelta.relativedelta(months=1)
     vrk = False
     if request.method=="POST":
         startDate = datetime.strptime(request.POST.get('startDate'), "%Y-%m-%d")
+        startDate.replace(tzinfo=timez)
         endDate = datetime.strptime(request.POST.get('endDate'), "%Y-%m-%d")
+        endDate.replace(tzinfo=timez)
         vrk = request.POST.get('keskiarvo')=='vrk'
-    df = objects_to_df(Temperature, ['Tuuli', 'Tuulimax'], date__gte=startDate.timestamp()-UTC2, date__lte=endDate.timestamp()+24*60*60-UTC2)
+    df = objects_to_df(Temperature, ['Tuuli', 'Tuulimax'], date__gte=startDate.timestamp(), date__lte=endDate.timestamp()+24*60*60)
 
     if vrk:
          df = df.groupby(pd.Grouper(freq='D')).agg({'Tuuli':'mean', 'Tuulimax':'max'})
@@ -129,7 +136,7 @@ def windchart(request):
         {'sdate': startDate.strftime("%Y-%m-%d"), 'edate': endDate.strftime("%Y-%m-%d"), 'vrk': vrk})
 
 def means(request):
-    year=2015
+    year=2020
     if request.method=="POST":
         year = int(request.POST.get('year'))
     df = objects_to_df(Temperature, ['Sisalla', 'Ulkona', 'Jarvessa', 'Kellarissa'])

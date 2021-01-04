@@ -1,5 +1,6 @@
 <html>
   <head>
+      <link rel="stylesheet" href="styles.css">
     <title>Nuottamäen lämpötiloja</title>
   </head>
   <body>
@@ -17,32 +18,31 @@
         {% endfor %}
         <input type="submit" value="Päivitä"/>
     </form>
-    <table cellspacing=24>
-        <tr>
-            <td>
-                <h2>Kuukauden keskiarvot</h2>
-                {{ table1_code|safe }}
-            </td>
-            <td>
-                <h2>verrattuna keskimääräiseen</h2>
-                {{ table3_code|safe }} 
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <h2>Vuoden keskiarvot</h2>
-                {{ table2_code|safe }}
-            </td>
-            <td>
-                <h2>verrattuna keskimääräiseen</h2>
-                {{ table4_code|safe }} 
-            </td>
-        </tr>
-        <tr>
-            <td>
-                {{ table5_code|safe }} 
-            </td>
-        </tr>
-    </table>
+
+    <div>
+        <div class='year'>
+            <h2>Kuukauden keskiarvot</h2>
+            {{ table1_code|safe }}
+        </div>
+        <div class='average'>
+            <h2>verrattuna keskimääräiseen</h2>
+            {{ table3_code|safe }} 
+        </div>
+    </dív>
+
+    <div>
+        <div class='year'>
+            <h2>Vuoden keskiarvot</h2>
+            {{ table2_code|safe }}
+        </div>
+        <div class='average'>
+            <h2>verrattuna keskimääräiseen</h2>
+            {{ table4_code|safe }} 
+        </div>
+    </div>
+    <div>
+        {{ table5_code|safe }} 
+    </div>
+
   </body>
 </html>
