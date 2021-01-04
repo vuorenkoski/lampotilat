@@ -12,11 +12,11 @@ from datetime import datetime
 from dateutil import tz, relativedelta
 import os
 
-#data_folder = '/var/www/html/nuottis/data/'
-data_folder = 'lampotilat/data/'
+data_folder = '/var/www/html/nuottis/data/'
+#data_folder = 'lampotilat/data/'
 chart_file = 'lampotilat/static/lampotilat/chart.png'
-#path = '/home/pi/serveri/lampotilat_app/lampotilat/'
-path = ''
+path = '/home/pi/serveri/lampotilat_app/lampotilat/'
+#path = ''
 csv_files = ['sisalla', 'ulkona', 'jarvessa', 'kellarissa', 'rauhalassa', 'saunassa', 'lampo_roykka']
 field_names = ['Sisalla', 'Ulkona', 'Jarvessa', 'Kellarissa', 'Rauhalassa', 'Saunassa', 'Roykassa']
 timezone = 'Europe/Helsinki'
@@ -49,7 +49,7 @@ def index(request):
     last_measurement = 'ei dataa'
     epoch = last_measurement_epoch()
     if epoch>0:
-        last_measurement = datetime.fromtimestamp(epoch, timez).strftime("%d.%m.%Y, %H:%M").dst()
+        last_measurement = datetime.fromtimestamp(epoch, timez).strftime("%d.%m.%Y, %H:%M")
     return render(request, 'lampotilat/index.html', {'loaded': last_measurement})
 
 def objects_to_df(model, fields, **kwargs):
