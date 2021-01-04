@@ -3,22 +3,25 @@ from django.shortcuts import render, redirect
 from .models import Temperature
 from django.db.models import Max
 
-from .load_data import load_dataset, timezone
+from .load_data import load_dataset
 import numpy as np
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
 from datetime import datetime
 from dateutil import tz, relativedelta
+import os
 
-data_folder = '/var/www/html/nuottis/data/'
-#data_folder = 'lampotilat/data/'
+#data_folder = '/var/www/html/nuottis/data/'
+data_folder = 'lampotilat/data/'
 chart_file = 'lampotilat/static/lampotilat/chart.png'
-path = '/home/pi/serveri/lampotilat_app/lampotilat/'
-#path = ''
+#path = '/home/pi/serveri/lampotilat_app/lampotilat/'
+path = ''
 csv_files = ['sisalla', 'ulkona', 'jarvessa', 'kellarissa', 'rauhalassa', 'saunassa', 'lampo_roykka']
 field_names = ['Sisalla', 'Ulkona', 'Jarvessa', 'Kellarissa', 'Rauhalassa', 'Saunassa', 'Roykassa']
+timezone = 'Europe/Helsinki'
 timez = tz.gettz(timezone)
+os.environ['TZ'] = timezone
 
 def save_figure(df, kind, unit):
     fig = df.plot(kind=kind,  figsize=(12, 5), fontsize=14).get_figure()
@@ -33,7 +36,7 @@ def setup(request):
     epoch = last_measurement_epoch()
     if epoch>0:
         Temperature.objects.filter(date=epoch).delete()
-    load_dataset(last_measurement_epoch(), csv_files, data_folder)
+    load_dataset(epoch, csv_files, data_folder)
     return redirect('/')
 
 def last_measurement_epoch():
@@ -46,7 +49,7 @@ def index(request):
     last_measurement = 'ei dataa'
     epoch = last_measurement_epoch()
     if epoch>0:
-        last_measurement = datetime.fromtimestamp(epoch, timez).strftime("%d.%m.%Y, %H:%M")
+        last_measurement = datetime.fromtimestamp(epoch, timez).strftime("%d.%m.%Y, %H:%M").dst()
     return render(request, 'lampotilat/index.html', {'loaded': last_measurement})
 
 def objects_to_df(model, fields, **kwargs):
@@ -66,9 +69,7 @@ def tempchart(request):
     if request.method=="POST":
         fields.extend(request.POST.getlist('anturit'))
         startDate = datetime.strptime(request.POST.get('startDate'), "%Y-%m-%d")
-        startDate.replace(tzinfo=timez)
         endDate = datetime.strptime(request.POST.get('endDate'), "%Y-%m-%d")
-        endDate.replace(tzinfo=timez)
         vrk = request.POST.get('keskiarvo')=='vrk'
     else:
         fields.extend(['Sisalla','Ulkona'])
@@ -87,9 +88,7 @@ def movechart(request):
     vrk = True
     if request.method=="POST":
         startDate = datetime.strptime(request.POST.get('startDate'), "%Y-%m-%d")
-        startDate.replace(tzinfo=timez)
         endDate = datetime.strptime(request.POST.get('endDate'), "%Y-%m-%d")
-        endDate.replace(tzinfo=timez)
         vrk = request.POST.get('keskiarvo')=='vrk'
     df = objects_to_df(Temperature, ['Liike'], date__gte=startDate.timestamp(), date__lte=endDate.timestamp()+24*60*60)
 
@@ -105,9 +104,7 @@ def rainchart(request):
     vrk = True
     if request.method=="POST":
         startDate = datetime.strptime(request.POST.get('startDate'), "%Y-%m-%d")
-        startDate.replace(tzinfo=timez)
         endDate = datetime.strptime(request.POST.get('endDate'), "%Y-%m-%d")
-        endDate.replace(tzinfo=timez)
         vrk = request.POST.get('keskiarvo')=='vrk'
     df = objects_to_df(Temperature, ['Sade', 'Lumi'], date__gte=startDate.timestamp(), date__lte=endDate.timestamp()+24*60*60)
 
@@ -123,9 +120,7 @@ def windchart(request):
     vrk = False
     if request.method=="POST":
         startDate = datetime.strptime(request.POST.get('startDate'), "%Y-%m-%d")
-        startDate.replace(tzinfo=timez)
         endDate = datetime.strptime(request.POST.get('endDate'), "%Y-%m-%d")
-        endDate.replace(tzinfo=timez)
         vrk = request.POST.get('keskiarvo')=='vrk'
     df = objects_to_df(Temperature, ['Tuuli', 'Tuulimax'], date__gte=startDate.timestamp(), date__lte=endDate.timestamp()+24*60*60)
 

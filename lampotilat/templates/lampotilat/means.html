@@ -1,6 +1,7 @@
 <html>
   <head>
-      <link rel="stylesheet" href="styles.css">
+      {% load static %}
+      <link rel="stylesheet" href="{% static 'lampotilat/styles.css' %}">
     <title>Nuottamäen lämpötiloja</title>
   </head>
   <body>
@@ -40,7 +41,7 @@
             {{ table4_code|safe }} 
         </div>
     </div>
-    <div>
+    <div  class='year'>
         {{ table5_code|safe }} 
     </div>
 

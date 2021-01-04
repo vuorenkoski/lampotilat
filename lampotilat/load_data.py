@@ -2,8 +2,6 @@ from .models import Temperature
 import numpy as np
 import pandas as pd
 
-timezone = 'Europe/Helsinki'
-
 def load_data(filename, last_measurement):
     df = pd.read_csv(filename, sep=',', warn_bad_lines=False, error_bad_lines=False, dtype=str)
     df.columns = ['epoch', 'data']
@@ -69,6 +67,7 @@ def load_dataset(last_measurement, csv_files, data_folder):
     print("yhdistetty")
     df = df.groupby(pd.Grouper(freq='H')).mean()
     df = df.sort_values('date')
+    print(df)
 #    df.to_csv(data_folder+'yhdistetty.csv', sep=',', float_format='%.1f')
     records = df.to_records()
     for record in records:
