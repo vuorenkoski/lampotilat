@@ -4,5 +4,8 @@ Web-palvelu jolla voi selailla mokin antureiden tallentamaa dataa. Data on csv m
 
 ## toteutus
 
-Python + Django
+Python + Django + Pandas + Matplotlib
+
+tuotanto: http://temps.vuorenkoski.fi
+
 

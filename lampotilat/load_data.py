@@ -1,20 +1,21 @@
 from .models import Temperature
 import numpy as np
 import pandas as pd
+from file_read_backwards import FileReadBackwards
 
 def load_data(filename, last_measurement):
-    f = open(filename,'r')
-    start = True
+    if last_measurement==0:
+        return load_data_old(filename, last_measurement)
+
     data = []
-    for line in f:
-        fields=line.split(',')
-        epoch=fields[0][0:10]
-        if len(epoch)==10:
-            if start and int(epoch)>last_measurement:
-                start = False
-            if not start:
+    with FileReadBackwards(filename, encoding="utf-8") as File:
+        for line in File:
+            fields=line.split(',')
+            epoch=fields[0][0:10]
+            if len(epoch)==10:
+                if int(epoch)<last_measurement:
+                    break
                 data.append([epoch, fields[1][0:-1]])
-    f.close()
 
     df = pd.DataFrame(data, columns = ['epoch', 'data'])
     df['date'] = pd.to_datetime(df['epoch'], unit='s')
