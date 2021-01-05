@@ -3,6 +3,27 @@ import numpy as np
 import pandas as pd
 
 def load_data(filename, last_measurement):
+    f = open(filename,'r')
+    start = True
+    data = []
+    for line in f:
+        fields=line.split(',')
+        epoch=fields[0][0:10]
+        if len(epoch)==10:
+            if start and int(epoch)>last_measurement:
+                start = False
+            if not start:
+                data.append([epoch, fields[1][0:-1]])
+    f.close()
+
+    df = pd.DataFrame(data, columns = ['epoch', 'data'])
+    df['date'] = pd.to_datetime(df['epoch'], unit='s')
+    df[filename] = pd.to_numeric(df['data'], errors='coerce')
+    df = df.set_index('date').drop(columns=['epoch', 'data'])
+    df = df[~df.index.duplicated(keep='first')]
+    return df
+
+def load_data_old(filename, last_measurement):
     df = pd.read_csv(filename, sep=',', warn_bad_lines=False, error_bad_lines=False, dtype=str)
     df.columns = ['epoch', 'data']
     df = df[df['epoch'].str.len()<15]
@@ -54,20 +75,13 @@ def load_dataset(last_measurement, csv_files, data_folder):
     data=[]
     for file in csv_files:
         data.append(load_tempdata(data_folder+file+'.csv', last_measurement))
-    print("lmäpötilat ladattu")
     data.append(load_winddata(data_folder+'tuuli.csv', last_measurement))
-    print("tuuli ladattu")
     data.append(load_raindata(data_folder+'sade.csv', last_measurement))
-    print("sade ladattu")
     data.append(load_movedata(data_folder+'liike.csv', last_measurement))
-    print("liike ladattu")
     data.append(load_snowdata(data_folder+'lumi_roykka.csv', last_measurement))
-    print("lumi ladattu")
     df = pd.concat(data, axis=1)
-    print("yhdistetty")
     df = df.groupby(pd.Grouper(freq='H')).mean()
     df = df.sort_values('date')
-    print(df)
 #    df.to_csv(data_folder+'yhdistetty.csv', sep=',', float_format='%.1f')
     records = df.to_records()
     for record in records:
