@@ -15,7 +15,7 @@ def load_data(filename, last_measurement):
             if len(epoch)==10:
                 if int(epoch)<last_measurement:
                     break
-                data.append([epoch, fields[1][0:-1]])
+                data.append([epoch, fields[1]])
 
     df = pd.DataFrame(data, columns = ['epoch', 'data'])
     df['date'] = pd.to_datetime(df['epoch'], unit='s')
