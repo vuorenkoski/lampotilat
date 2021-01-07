@@ -6,7 +6,7 @@
   </head>
   <body>
     <a href="/">Alkuun</a>
-    <h1>Lämpötilat - keskiarvoja</h1>
+    <h1>Lämpötilat - keskiarvoja {{prechecked}}</h1>
     <form action="/means" method="POST">
         {% csrf_token %}
         {% for year in years %}

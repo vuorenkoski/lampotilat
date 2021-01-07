@@ -1,22 +1,19 @@
-from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from .models import Temperature
 from django.db.models import Max
 
 from .load_data import load_dataset
-import numpy as np
 import pandas as pd
-import matplotlib
-import matplotlib.pyplot as plt
 from datetime import datetime
 from dateutil import tz, relativedelta
 import os
 
-data_folder = '/var/www/html/nuottis/data/'
-#data_folder = 'lampotilat/data/'
+#data_folder = '/var/www/html/nuottis/data/'
+data_folder = 'lampotilat/data/'
+#path = '/home/pi/serveri/lampotilat_app/lampotilat/'
+path = ''
+
 chart_file = 'lampotilat/static/lampotilat/chart.png'
-path = '/home/pi/serveri/lampotilat_app/lampotilat/'
-#path = ''
 csv_files = ['sisalla', 'ulkona', 'jarvessa', 'kellarissa', 'rauhalassa', 'saunassa', 'lampo_roykka']
 field_names = ['Sisalla', 'Ulkona', 'Jarvessa', 'Kellarissa', 'Rauhalassa', 'Saunassa', 'Roykassa']
 timezone = 'Europe/Helsinki'
@@ -29,6 +26,8 @@ def save_figure(df, kind, unit):
     fig.axes[0].set_ylabel(unit, fontsize=14)
     fig.axes[0].set_xlabel('')
     fig.axes[0].grid(axis='y')
+    fig.axes[0].tick_params(which='major', labelsize=16)
+    fig.axes[0].tick_params(which='minor', labelsize=12)
     fig.savefig(path+chart_file)
 
 def setup(request):
