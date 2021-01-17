@@ -8,10 +8,10 @@ from datetime import datetime
 from dateutil import tz, relativedelta
 import os
 
-#data_folder = '/var/www/html/nuottis/data/'
-data_folder = 'lampotilat/data/'
-#path = '/home/pi/serveri/lampotilat_app/lampotilat/'
-path = ''
+data_folder = '/var/www/html/nuottis/data/'
+#data_folder = 'lampotilat/data/'
+path = '/home/pi/serveri/lampotilat_app/lampotilat/'
+#path = ''
 
 chart_file = 'lampotilat/static/lampotilat/chart.png'
 csv_files = ['sisalla', 'ulkona', 'jarvessa', 'kellarissa', 'rauhalassa', 'saunassa', 'lampo_roykka']

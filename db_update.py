@@ -6,8 +6,10 @@ from contextlib import closing
 
 temp_files = ['sisalla', 'ulkona', 'jarvessa', 'kellarissa', 'rauhalassa', 'saunassa', 'lampo_roykka']
 
-#data_folder = '/var/www/html/nuottis/data/'
-data_folder = 'lampotilat/data/'
+data_folder = '/var/www/html/nuottis/data/'
+#data_folder = 'lampotilat/data/'
+path = '/home/pi/serveri/lampotilat_app/lampotilat/'
+#path = ''
 
 def load_data(filename, last_measurement):
     data = []
@@ -64,7 +66,7 @@ def load_movedata(filename, last_measurement):
     return df
 
 def load_dataset():
-    with closing(sqlite3.connect('db.sqlite3')) as connection:
+    with closing(sqlite3.connect(path+'db.sqlite3')) as connection:
         with closing(connection.cursor()) as cursor:
             last_measurement=cursor.execute('SELECT MAX(date) FROM lampotilat_temperature').fetchone()[0]
             if last_measurement==None:
@@ -73,7 +75,7 @@ def load_dataset():
                 cursor.execute('DELETE FROM lampotilat_temperature WHERE date=?', (last_measurement,))
                 connection.commit()
 
-            print(last_measurement)
+#            print(last_measurement)
             data=[]
             for file in temp_files:
                 data.append(load_tempdata(data_folder+file+'.csv', last_measurement))
@@ -85,7 +87,7 @@ def load_dataset():
             df = df.groupby(pd.Grouper(freq='H')).mean()
             df = df.sort_values('date')
             records = df.to_records()
-            print(len(records))
+#            print(len(records))
             for record in records:
                 data=(int(record[0].astype('datetime64[s]').astype('int')),record[1],record[2],record[3],record[4],record[5],record[6],record[7],record[8],record[9],record[10],record[11],record[12])
                 cursor.execute(
