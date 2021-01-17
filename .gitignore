@@ -4,4 +4,5 @@ lampotilat/migrations/*
 lampotilat/__pycache__/*
 .ipynb_checkpoints/
 lampotilat/static/lampotilat/chart.png
+settings.json
 
